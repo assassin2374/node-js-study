@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const mysql = require('mysql');
+const Todo = require('./model/Todo');
+const TodoRepsitory = require('./repsitory/TodoRepsitory');
+const TodoService = require('./service/TodoService');
+const TodoController = require('./controller/TodoController');
 
 //#region expressでサーバーの設定
 
@@ -36,49 +40,10 @@ connection.connect((err) => {
 //#endregion
 
 //#region APIのエンドポイント（URL作成）
-const sampleDate = [
-  {
-    id:0,
-    tiitle:'sample title',
-    description:'sample description',
-  },
-  {
-    id:1,
-    tiitle:'sample title 2',
-    description:'sample description 2',
-  },
-  {
-    id:2,
-    tiitle:'sample title 3',
-    description:'sample description 3',
-  }
-];
 
-app.get('/',(req, res, next)=>{
-  const sql = 'select * from todos';
-  connection.query(sql, (err, results)=>{
-    if(err) throw err;
-    res.json(results);
-  });
-});
+const todoRepsitory = new TodoRepsitory(connection);
+const todoService = new TodoService(todoRepsitory);
+const todoController = new TodoController(todoService);
+app.use('/api/', todoController.router);
 
-app.get('/:id',(req, res, next)=>{
-  const id= parseInt(req.params.id);
-  const sql = 'select * from todos where ?';
-  connection.query(sql, {id:id},(err, results)=>{
-    if(err) throw err;
-    res.json(results[0]);
-  });
-});
-
-// app.get('/:id',(req, res, next)=>{
-//   const id= parseInt(req.params.id);
-//   const singleData=sampleDate.find((singleData)=>singleData.id===id)
-//   res.json(singleData);
-// });
-
-// app.post('/',(req, res, next)=>{
-//   const editData = req.body;
-//   console.log(editData);
-//   res.json(editData);
-// });
+//#endregion
